@@ -1,11 +1,12 @@
 module tt_um_voting_machine (
-    input  wire [7:0] ui_in,   // 8 input pins
-    output wire [7:0] uo_out,  // 8 output pins
-    input  wire [7:0] uio_in,  // unused
-    output wire [7:0] uio_out, // unused
-    output wire [7:0] uio_oe,  // unused
-    input  wire clk,           // system clock
-    input  wire rst_n          // global reset (active low, ignored here)
+    input  wire [7:0] ui_in,    // Dedicated inputs
+    output wire [7:0] uo_out,   // Dedicated outputs
+    input  wire [7:0] uio_in,   // IOs: Input path
+    output wire [7:0] uio_out,  // IOs: Output path
+    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
+    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
+    input  wire       clk,      // clock
+    input  wire       rst_n     // reset_n - low to reset
 );
 
     //-----------------------------------------
