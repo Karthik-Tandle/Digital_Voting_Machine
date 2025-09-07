@@ -1,13 +1,3 @@
-/*
- * Copyright (c) 2024 Your Name
- * SPDX-License-Identifier: Apache-2.0
- */
-
-`default_nettype none
-
-// 4-Bit Digital Voting Machine
-// TinyTapeout compliant: 8 inputs, 8 outputs
-
 module tt_um_voting_machine (
     input  wire [7:0] ui_in,   // 8 input pins
     output wire [7:0] uo_out,  // 8 output pins
@@ -31,7 +21,7 @@ module tt_um_voting_machine (
     reg  [2:0] debug;
 
     //-----------------------------------------
-    // Vote counters
+    // Vote counters for 4 candidates
     //-----------------------------------------
     reg [7:0] cnt0, cnt1, cnt2, cnt3;
     reg [11:0] total_votes;
@@ -57,38 +47,11 @@ module tt_um_voting_machine (
         (voter == 4'b1000) ? 2'd3 : 2'd0;
 
     //-----------------------------------------
-    // Winner combinational logic
-    //-----------------------------------------
-    reg [3:0] winner_next;
-    always @(*) begin
-        reg [7:0] max_cnt;
-        reg [1:0] idx;
-
-        max_cnt = cnt0;
-        idx = 2'd0;
-
-        if (cnt1 > max_cnt) begin max_cnt = cnt1; idx = 2'd1; end
-        if (cnt2 > max_cnt) begin max_cnt = cnt2; idx = 2'd2; end
-        if (cnt3 > max_cnt) begin max_cnt = cnt3; idx = 2'd3; end
-
-        if (max_cnt == 8'd0)
-            winner_next = 4'b0000;  // no votes yet
-        else begin
-            case (idx)
-                2'd0: winner_next = 4'b0001;
-                2'd1: winner_next = 4'b0010;
-                2'd2: winner_next = 4'b0100;
-                2'd3: winner_next = 4'b1000;
-                default: winner_next = 4'b0000;
-            endcase
-        end
-    end
-
-    //-----------------------------------------
-    // Main sequential logic
+    // Main logic - Sequential
     //-----------------------------------------
     always @(posedge clk or posedge rst) begin
         if (rst) begin
+            // Reset all counters
             cnt0 <= 8'd0;
             cnt1 <= 8'd0;
             cnt2 <= 8'd0;
@@ -106,6 +69,7 @@ module tt_um_voting_machine (
                 2'b00: begin
                     // Voting Mode
                     voting_complete <= 1'b0;
+
                     if (confirm_rising && onehot_valid) begin
                         case (sel_index)
                             2'd0: cnt0 <= cnt0 + 1'b1;
@@ -115,19 +79,20 @@ module tt_um_voting_machine (
                         endcase
                         total_votes <= total_votes + 1'b1;
                     end
+
+                    // update debug count
                     debug <= total_votes[2:0];
-                    winner <= 4'b0000; // hide winner until counting
+                    winner <= 4'b0000;
                 end
 
                 2'b01: begin
                     // Counting Mode
                     voting_complete <= 1'b1;
                     debug <= total_votes[2:0];
-                    winner <= winner_next;
                 end
 
                 2'b10: begin
-                    // Reset Mode
+                    // Reset Mode (clear everything)
                     cnt0 <= 8'd0;
                     cnt1 <= 8'd0;
                     cnt2 <= 8'd0;
@@ -139,11 +104,46 @@ module tt_um_voting_machine (
                 end
 
                 2'b11: begin
-                    // Test Mode
+                    // Test Mode - just show debug count
                     voting_complete <= 1'b0;
                     debug <= total_votes[2:0];
-                    winner <= 4'b0000; // no winner in test mode
                 end
+            endcase
+        end
+    end
+
+    //-----------------------------------------
+    // Combinational Winner Selection
+    //-----------------------------------------
+    always @(*) begin
+        reg [7:0] max_cnt;
+        reg [1:0] idx;
+
+        max_cnt = cnt0;
+        idx = 2'd0;
+
+        if (cnt1 > max_cnt) begin
+            max_cnt = cnt1;
+            idx = 2'd1;
+        end
+        if (cnt2 > max_cnt) begin
+            max_cnt = cnt2;
+            idx = 2'd2;
+        end
+        if (cnt3 > max_cnt) begin
+            max_cnt = cnt3;
+            idx = 2'd3;
+        end
+
+        if (max_cnt == 8'd0) begin
+            winner = 4'b0000; // no votes yet
+        end else begin
+            case (idx)
+                2'd0: winner = 4'b0001;
+                2'd1: winner = 4'b0010;
+                2'd2: winner = 4'b0100;
+                2'd3: winner = 4'b1000;
+                default: winner = 4'b0000;
             endcase
         end
     end
@@ -152,7 +152,7 @@ module tt_um_voting_machine (
     // Assign outputs
     //-----------------------------------------
     assign uo_out = {debug, voting_complete, winner};
-    assign uio_out = 8'h00;
+    assign uio_out = 8'h00; // no bidirectional pins used
     assign uio_oe  = 8'h00;
 
 endmodule
