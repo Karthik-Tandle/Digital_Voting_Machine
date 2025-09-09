@@ -28,7 +28,7 @@ input  wire       ena,     // enable
     // Vote counters
     //-----------------------------------------
     reg [7:0] cnt0, cnt1, cnt2, cnt3;
-    reg [11:0] total_votes;
+    reg [15:0] total_votes;
 
     //-----------------------------------------
     // Confirm edge detection
