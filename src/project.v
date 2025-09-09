@@ -7,7 +7,6 @@ module tt_um_voting_machine (
     input  wire [7:0] uio_in,  // unused
     output wire [7:0] uio_out, // unused
     output wire [7:0] uio_oe,  // unused
-    input  wire       ena,
     input  wire clk,           // system clock
     input  wire rst_n          // global reset (active low, ignored here)
 );
@@ -54,10 +53,11 @@ module tt_um_voting_machine (
     // Winner combinational logic
     //-----------------------------------------
     reg [3:0] winner_next;
-    always @(*) begin
-        reg [7:0] max_cnt;
+    reg [7:0] max_cnt;
         reg [1:0] idx;
 
+    always @(*) begin
+        
         max_cnt = cnt0;
         idx = 2'd0;
 
@@ -119,7 +119,7 @@ module tt_um_voting_machine (
                     debug <= total_votes[2:0];
                     winner <= winner_next;
                 end
-
+sim:/tb_voting_machine
                 2'b10: begin
                     // Reset Mode
                     cnt0 <= 8'd0;
