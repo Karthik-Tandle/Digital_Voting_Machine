@@ -120,7 +120,7 @@ module tt_um_voting_machine (
                     debug <= total_votes[2:0];
                     winner <= winner_next;
                 end
-sim:/tb_voting_machine
+
                 2'b10: begin
                     // Reset Mode
                     cnt0 <= 8'd0;
