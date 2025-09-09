@@ -41,8 +41,86 @@ Reset again: Verify all counters clear back to zero.
 | `01` (Counting)     | Show result | One-hot winner                | `1`                           | Total votes % 8       |
 | `10` (Reset)        | Clear all   | `0000`                        | `0`                           | `000`                 |
 | `11` (Test)         | Debug only  | `0000`                        | `0`                           | Total votes % 8       |
+-------
+## Flow Chart of Voting Machine (All Modes)
+
+```text
+                 ┌───────────────┐
+                 │     START     │
+                 └───────┬───────┘
+                         │
+                 ┌───────▼────────┐
+                 │ Check RESET ?   │
+                 └───────┬────────┘
+                         │Yes
+                         ▼
+                 ┌────────────────┐
+                 │ Clear counters │
+                 │ winner=0000    │
+                 │ total_votes=0  │
+                 └───────┬────────┘
+                         │No
+                         ▼
+                 ┌───────────────┐
+                 │  Check MODE   │
+                 └─┬─────┬───────┘
+                   │     │
+   ┌───────────────▼┐ ┌──▼──────────────┐
+   │ MODE = 00      │ │ MODE = 01       │
+   │ Voting Mode    │ │ Counting Mode   │
+   └───────┬────────┘ └───────┬────────┘
+           │                  │
+   ┌───────▼─────────┐ ┌──────▼───────────────────────┐
+   │ Confirm Rising? │ │ Compute MAX of cnt0..cnt3    │
+   └───────┬─────────┘ │ Count how many equal to MAX  │
+           │Yes         └───────┬─────────────────────┘
+           ▼                     │
+   ┌──────────────────────┐ ┌────▼───────────────────────┐
+   │ One-hot voter valid? │ │ If tie_count>1 → Winner=0000│
+   └───────┬──────────────┘ └─────┬───────────────────────┘
+           │Yes                     │Else
+           ▼                        ▼
+   ┌──────────────────────┐   ┌─────────────────────────┐
+   │ Increment candidate  │   │ Winner = One-hot of idx │
+   │ counter & total_votes│   │ VotingComplete = 1      │
+   └──────────────────────┘   └─────────────────────────┘
+           │
+   ┌───────▼────────┐
+   │ Winner=0000    │ (Hidden in Voting)
+   │ VotingComplete=0│
+   └────────────────┘
+
+                   │
+     ┌─────────────┴─────────────┐
+     │ MODE = 10 (Reset Mode)    │
+     └─────────────┬─────────────┘
+                   ▼
+     ┌───────────────────────────┐
+     │ Clear cnt0..cnt3          │
+     │ total_votes=0             │
+     │ winner=0000               │
+     │ voting_complete=0         │
+     │ debug=000                 │
+     └───────────────────────────┘
+
+                   │
+     ┌─────────────┴─────────────┐
+     │ MODE = 11 (Test Mode)     │
+     └─────────────┬─────────────┘
+                   ▼
+     ┌───────────────────────────┐
+     │ Show only debug (votes[2:0]) │
+     │ Winner=0000                │
+     │ voting_complete=0          │
+     └───────────────────────────┘
+
+                   │
+                   ▼
+             ┌────────────┐
+             │     END    │
+             └────────────┘
 
 
 ## External hardware
 
-None
+leds at output
