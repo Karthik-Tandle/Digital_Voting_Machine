@@ -30,8 +30,8 @@ module tt_um_voting_machine (
     //-----------------------------------------
     // Vote counters (16-bit wide)
     //-----------------------------------------
-    reg [15:0] cnt0, cnt1, cnt2, cnt3;
-    reg [15:0] total_votes;
+    reg [11:0] cnt0, cnt1, cnt2, cnt3;
+    reg [11:0] total_votes;
 
     //-----------------------------------------
     // Confirm edge detection
@@ -57,8 +57,10 @@ module tt_um_voting_machine (
     // Winner combinational logic with tie detection
     //-----------------------------------------
     reg [3:0] winner_next;
+    reg [11:0] max_cnt;
+        reg [1:0]  idx;
     always @(*) begin
-        reg [15:0] max_cnt;
+        reg [11:0] max_cnt;
         reg [1:0]  idx;
         integer tie_count;
 
@@ -78,7 +80,7 @@ module tt_um_voting_machine (
         if (cnt3 == max_cnt) tie_count = tie_count + 1;
 
         // Decide winner
-        if (max_cnt == 16'd0) begin
+        if (max_cnt == 12'd0) begin
             winner_next = 4'b0000;   // no votes yet
         end else if (tie_count > 1) begin
             winner_next = 4'b0000;   // tie condition → no clear winner
@@ -98,11 +100,11 @@ module tt_um_voting_machine (
     //-----------------------------------------
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            cnt0 <= 16'd0;
-            cnt1 <= 16'd0;
-            cnt2 <= 16'd0;
-            cnt3 <= 16'd0;
-            total_votes <= 16'd0;
+            cnt0 <= 12'd0;
+            cnt1 <= 12'd0;
+            cnt2 <= 12'd0;
+            cnt3 <= 12'd0;
+            total_votes <= 12'd0;
             confirm_d <= 1'b0;
             voting_complete <= 1'b0;
             winner <= 4'd0;
@@ -137,11 +139,11 @@ module tt_um_voting_machine (
 
                 2'b10: begin
                     // Reset Mode
-                    cnt0 <= 16'd0;
-                    cnt1 <= 16'd0;
-                    cnt2 <= 16'd0;
-                    cnt3 <= 16'd0;
-                    total_votes <= 16'd0;
+                    cnt0 <= 12'd0;
+                    cnt1 <= 12'd0;
+                    cnt2 <= 12'd0;
+                    cnt3 <= 12'd0;
+                    total_votes <= 12'd0;
                     voting_complete <= 1'b0;
                     winner <= 4'b0000;
                     debug <= 3'd0;
