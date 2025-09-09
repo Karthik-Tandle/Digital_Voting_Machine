@@ -1,41 +1,82 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-# Tiny Tapeout Verilog Project Template
+## 4-Bit Digital Voting Machine
 
-- [Read the documentation for project](docs/info.md)
+A TinyTapeout-compliant digital voting machine that supports up to 4 candidates with vote counting, winner detection, reset, and debug output.
 
-## What is Tiny Tapeout?
+Features
+--------------
+Supports 4 candidates (one-hot input).
 
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
+4 modes of operation: Voting, Counting, Reset, Test.
 
-To learn more and get started, visit https://tinytapeout.com.
+Displays the winner in one-hot format.
 
-## Set up your Verilog project
+Voting complete indicator when counting.
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
+Debug output shows total_votes % 8.
 
-The GitHub action will automatically build the ASIC files using [OpenLane](https://www.zerotoasiccourse.com/terminology/openlane/).
+I/O Mapping
+---------------
+Inputs (ui_in)
+| Bits   | Name    | Description                                                     |
+| ------ | ------- | --------------------------------------------------------------- |
+| [3:0] | voter   | Candidate selection (one-hot: 0001, 0010, 0100, 1000)           |
+| [4]   | confirm | Vote confirm button                                             |
+| [5]   | rst     | Asynchronous reset                                              |
+| [7:6] | mode    | Mode select (00 = Voting, 01 = Counting, 10 = Reset, 11 = Test) |
 
-## Enable GitHub actions to build the results page
+Outputs (uo_out)
+----------------
+| Bits   | Name             | Description                              |
+| ------ | ---------------- | ---------------------------------------- |
+| [3:0] | winner           | Winning candidate (one-hot)              |
+| [4]   | voting\_complete | High when in Counting mode               |
+| [7:5] | debug            | Lower 3 bits of total vote count (`% 8`) |
 
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
+Modes of Operation
+--------------------
+| Mode (`ui_in[7:6]`) | Action      | Winner Output  | Voting Complete | Debug (votes % 8) |
+| ------------------- | ----------- | -------------- | --------------- | ----------------- |
+| `00` (Voting)       | Store votes | `0000`         | `0`             | Active            |
+| `01` (Counting)     | Show result | One-hot winner | `1`             | Active            |
+| `10` (Reset)        | Clear all   | `0000`         | `0`             | `000`             |
+| `11` (Test)         | Debug only  | `0000`         | `0`             | Active            |
 
-## Resources
 
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
+# How it Works
 
-## What next?
+Voter presses one candidate button and confirms with the confirm button.
 
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
+On confirm, the candidate’s vote counter increments and total votes increase.
+
+Winner selection logic compares all four counters to display the highest.
+
+Reset mode clears all counters.
+
+Debug output shows total votes modulo 8 (3-bit wraparound).
+
+# How to Test
+
+Reset: Set mode = 10 to clear all votes.
+
+Voting: Set mode = 00, press candidate button + confirm to cast votes.
+
+Counting: Set mode = 01, check winner output matches highest votes and debug shows votes % 8.
+
+Test: Set mode = 11, only debug count is shown.
+
+Reset again: Verify everything clears to zero.
+
+Example Debug Count (Votes % 8)
+| Total Votes | Debug Output (`uo_out[7:5]`) |
+| ----------- | ---------------------------- |
+| 0           | 000                          |
+| 1           | 001                          |
+| 2           | 010                          |
+| 3           | 011                          |
+| 4           | 100                          |
+| 5           | 101                          |
+| 6           | 110                          |
+| 7           | 111                          |
+| 8           | 000 (wraps around)           |
