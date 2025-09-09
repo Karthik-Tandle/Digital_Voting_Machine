@@ -60,8 +60,7 @@ module tt_um_voting_machine (
     reg [11:0] max_cnt;
         reg [1:0]  idx;
     always @(*) begin
-        reg [11:0] max_cnt;
-        reg [1:0]  idx;
+
         integer tie_count;
 
         // Find max count and its index
