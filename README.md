@@ -1,6 +1,6 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-## 4-Bit Digital Voting Machine
+## 4-Bit Digital Voting Machine 
 
 A TinyTapeout-compliant digital voting machine that supports up to 4 candidates with vote counting, winner detection, reset, and debug output.
 
