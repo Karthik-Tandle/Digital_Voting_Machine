@@ -7,9 +7,8 @@ module tt_um_voting_machine (
     input  wire [7:0] uio_in,  // unused
     output wire [7:0] uio_out, // unused
     output wire [7:0] uio_oe,  // unused
-    input  wire       ena,     // enable
-    input  wire       clk,     // system clock
-    input  wire       rst_n    // active-low reset
+    input  wire clk,           // system clock
+    input  wire rst_n          // global reset (active low, ignored here)
 );
 
     //-----------------------------------------
@@ -51,14 +50,15 @@ module tt_um_voting_machine (
         (voter == 4'b1000) ? 2'd3 : 2'd0;
 
     //-----------------------------------------
-    // Winner combinational logic
+    // Winner combinational logic with tie detection
     //-----------------------------------------
     reg [3:0] winner_next;
-    reg [7:0] max_cnt;
-        reg [1:0] idx;
-
     always @(*) begin
-        
+        reg [7:0] max_cnt;
+        reg [1:0] idx;
+        integer tie_count;
+
+        // Find max count and its index
         max_cnt = cnt0;
         idx = 2'd0;
 
@@ -66,9 +66,19 @@ module tt_um_voting_machine (
         if (cnt2 > max_cnt) begin max_cnt = cnt2; idx = 2'd2; end
         if (cnt3 > max_cnt) begin max_cnt = cnt3; idx = 2'd3; end
 
-        if (max_cnt == 8'd0)
-            winner_next = 4'b0000;  // no votes yet
-        else begin
+        // Count how many candidates match the max
+        tie_count = 0;
+        if (cnt0 == max_cnt) tie_count = tie_count + 1;
+        if (cnt1 == max_cnt) tie_count = tie_count + 1;
+        if (cnt2 == max_cnt) tie_count = tie_count + 1;
+        if (cnt3 == max_cnt) tie_count = tie_count + 1;
+
+        // Decide winner
+        if (max_cnt == 8'd0) begin
+            winner_next = 4'b0000;   // no votes yet
+        end else if (tie_count > 1) begin
+            winner_next = 4'b0000;   // tie condition → no clear winner
+        end else begin
             case (idx)
                 2'd0: winner_next = 4'b0001;
                 2'd1: winner_next = 4'b0010;
