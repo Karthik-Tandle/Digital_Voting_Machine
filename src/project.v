@@ -7,6 +7,7 @@ module tt_um_voting_machine (
     input  wire [7:0] uio_in,  // unused
     output wire [7:0] uio_out, // unused
     output wire [7:0] uio_oe,  // unused
+    input  wire       ena,     // enable
     input  wire clk,           // system clock
     input  wire rst_n          // global reset (active low, ignored here)
 );
