@@ -1,16 +1,13 @@
 // 4-Bit Digital Voting Machine
 // TinyTapeout compliant: 8 inputs, 8 outputs
 
-// 4-Bit Digital Voting Machine
-// TinyTapeout compliant: 8 inputs, 8 outputs
-
 module tt_um_voting_machine (
     input  wire [7:0] ui_in,   // 8 input pins
     output wire [7:0] uo_out,  // 8 output pins
     input  wire [7:0] uio_in,  // unused
     output wire [7:0] uio_out, // unused
     output wire [7:0] uio_oe,  // unused
-    input  wire       ena,     // enable
+input  wire       ena,     // enable
     input  wire clk,           // system clock
     input  wire rst_n          // global reset (active low, ignored here)
 );
@@ -28,9 +25,9 @@ module tt_um_voting_machine (
     reg  [2:0] debug;
 
     //-----------------------------------------
-    // Vote counters (16-bit wide)
+    // Vote counters
     //-----------------------------------------
-    reg [11:0] cnt0, cnt1, cnt2, cnt3;
+    reg [7:0] cnt0, cnt1, cnt2, cnt3;
     reg [11:0] total_votes;
 
     //-----------------------------------------
@@ -57,10 +54,9 @@ module tt_um_voting_machine (
     // Winner combinational logic with tie detection
     //-----------------------------------------
     reg [3:0] winner_next;
-    reg [11:0] max_cnt;
-        reg [1:0]  idx;
     always @(*) begin
-
+        reg [7:0] max_cnt;
+        reg [1:0] idx;
         integer tie_count;
 
         // Find max count and its index
@@ -79,7 +75,7 @@ module tt_um_voting_machine (
         if (cnt3 == max_cnt) tie_count = tie_count + 1;
 
         // Decide winner
-        if (max_cnt == 12'd0) begin
+        if (max_cnt == 8'd0) begin
             winner_next = 4'b0000;   // no votes yet
         end else if (tie_count > 1) begin
             winner_next = 4'b0000;   // tie condition → no clear winner
@@ -99,10 +95,10 @@ module tt_um_voting_machine (
     //-----------------------------------------
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            cnt0 <= 12'd0;
-            cnt1 <= 12'd0;
-            cnt2 <= 12'd0;
-            cnt3 <= 12'd0;
+            cnt0 <= 8'd0;
+            cnt1 <= 8'd0;
+            cnt2 <= 8'd0;
+            cnt3 <= 8'd0;
             total_votes <= 12'd0;
             confirm_d <= 1'b0;
             voting_complete <= 1'b0;
@@ -125,7 +121,7 @@ module tt_um_voting_machine (
                         endcase
                         total_votes <= total_votes + 1'b1;
                     end
-                    debug <= total_votes[2:0]; // show only lower 3 bits
+                    debug <= total_votes[2:0];
                     winner <= 4'b0000; // hide winner until counting
                 end
 
@@ -138,10 +134,10 @@ module tt_um_voting_machine (
 
                 2'b10: begin
                     // Reset Mode
-                    cnt0 <= 12'd0;
-                    cnt1 <= 12'd0;
-                    cnt2 <= 12'd0;
-                    cnt3 <= 12'd0;
+                    cnt0 <= 8'd0;
+                    cnt1 <= 8'd0;
+                    cnt2 <= 8'd0;
+                    cnt3 <= 8'd0;
                     total_votes <= 12'd0;
                     voting_complete <= 1'b0;
                     winner <= 4'b0000;
